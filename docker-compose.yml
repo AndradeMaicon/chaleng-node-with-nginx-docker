@@ -6,24 +6,31 @@ services:
     build:
       context: node
       dockerfile: Dockerfile.prod
-    image: andrademaicon/nodejs:dev
+    image: andrademaicon/nodejs:prod
     container_name: app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
+    command: npm start
     networks:
       - node-network
     volumes:
       - ./node:/usr/app
+      - /usr/app/node_modules
     tty: true
     depends_on:
     - db
 
   db:
-    image: mysql:5.7
+    # build:
+    #   context: db
+    #   dockerfile: Dockerfile.prod
+    image: andrademaicon/mysql:prod
     command: --innodb-use-native-aio=0
     container_name: db
     restart: always
     tty: true
     volumes:
       - ./mysql:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
     environment:
       - MYSQL_DATABASE=nodedb
       - MYSQL_ROOT_PASSWORD=root
